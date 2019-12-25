@@ -13,28 +13,30 @@ const Square: React.FC<SquareProps> = ({onClick, value}) => {
 
 interface BoardProps {
   value: { squares: (string | null)[]};
-  onClick: () => void;
+  onClick: (squares:(string | null)[]) => void;
 }
 
-//const Board: React.FC<BoardProps> = ({value, onClick}) => {
-const Board: React.FC = () => {
-  const [squares, setSquares] = React.useState<(string | null)[]>(Array(9).fill(null));
+//var test:(a: number, b: number) => number = (a: number, b:number):number => a + b;
+
+const Board: React.FC<BoardProps> = ({value, onClick}) => {
+//const Board: React.FC = () => {
+  //const [squares, setSquares] = React.useState<(string | null)[]>(Array(9).fill(null));
 
   const [xIsNext, setXIsNext] = React.useState(true);
 
   const renderSquare = (i: number) => <Square
-    value={squares[i]}
+    value={value.squares[i]}
     onClick={() => handleClick(i)}
   />;
 
   const handleClick = (i:number) => {
-    if (calculateWinner(squares) || squares[i]) {
+    if (calculateWinner(value.squares) || value.squares[i]) {
       return;
     }
 
-    const nextSquares = squares.slice();
+    const nextSquares = value.squares.slice();
     nextSquares[i] = xIsNext ? 'X' : 'O';
-    setSquares(nextSquares);
+    onClick(nextSquares);
     setXIsNext(prev => !prev);
   }
   const calculateWinner = (squares: (string | null)[]) => {
@@ -56,7 +58,7 @@ const Board: React.FC = () => {
     }
     return null;
   }
-  const winner = calculateWinner(squares);
+  const winner = calculateWinner(value.squares);
   const status = winner
     ? `Winner: ${winner}`
     : `Next player: ${xIsNext ? 'X' : 'O'}`;
@@ -86,14 +88,30 @@ const Board: React.FC = () => {
 const Game: React.FC = () => {
   const [history, setHistory] = React.useState< { squares: (string | null)[]}[] >([{squares : Array(9).fill(null)}]);
   //<squaresの中身はstring or nullの配列です。配列を配列の中に入れます。>初期値は配列の中にオブジェクトのsquaresを入れています。
+  const handleClick = (squares:(string | null)[]) => {
+    setHistory(history.concat([{squares}]))
+  }
+
+  const buttons = history.map((unk: any, index: number):React.ReactElement => {
+    const label = index ? 'Go to move #' + index : 'Go to game start';
+    return <li key={index}>
+      <button onClick={() => {
+        setHistory(history.slice(0, index + 1))
+      }}>{label}</button>
+    </li>
+  });
+
+
   return (
     <div className="game">
       <div className="game-board">
-        <Board />
+        <Board value={history[history.length - 1]} onClick={handleClick} />
       </div>
       <div className="game-info">
         <div>{/* status */}</div>
-        <ol>{/* TODO */}</ol>
+        <ol>
+          {buttons}
+        </ol>
       </div>
     </div>
   )
