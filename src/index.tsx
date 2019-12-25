@@ -8,11 +8,15 @@ interface SquareProps {
 }
 
 const Square: React.FC<SquareProps> = ({onClick, value}) => {
-  //const [value, setValue] = React.useState<string | null>(null);
-
   return <button className="square" onClick={onClick}>{value}</button>
 };
 
+interface BoardProps {
+  value: { squares: (string | null)[]};
+  onClick: () => void;
+}
+
+//const Board: React.FC<BoardProps> = ({value, onClick}) => {
 const Board: React.FC = () => {
   const [squares, setSquares] = React.useState<(string | null)[]>(Array(9).fill(null));
 
@@ -79,17 +83,21 @@ const Board: React.FC = () => {
   );
 };
 
-const Game: React.FC = () => (
-  <div className="game">
-    <div className="game-board">
-      <Board />
+const Game: React.FC = () => {
+  const [history, setHistory] = React.useState< { squares: (string | null)[]}[] >([{squares : Array(9).fill(null)}]);
+  //<squaresの中身はstring or nullの配列です。配列を配列の中に入れます。>初期値は配列の中にオブジェクトのsquaresを入れています。
+  return (
+    <div className="game">
+      <div className="game-board">
+        <Board />
+      </div>
+      <div className="game-info">
+        <div>{/* status */}</div>
+        <ol>{/* TODO */}</ol>
+      </div>
     </div>
-    <div className="game-info">
-      <div>{/* status */}</div>
-      <ol>{/* TODO */}</ol>
-    </div>
-  </div>
-);
+  )
+};
 
 // ========================================
 
