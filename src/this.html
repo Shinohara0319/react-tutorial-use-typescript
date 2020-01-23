@@ -1,0 +1,13 @@
+<button onclick="test(this)">test</button>
+
+<script>
+  function clickHandler(a) {
+    console.log(this);
+    console.log(this == window);
+    console.log(a);
+    console.log(a === window);
+    console.log(a === this);
+  }
+
+  window.test = clickHandler;
+</script>
