@@ -1,6 +1,8 @@
 import * as React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
+import { NowDateStore } from "./NowDateStore";
+import { observer } from "mobx-react";
 
 type Squares = (string | null)[];
 type History = { squares: Squares }[];
@@ -88,8 +90,25 @@ const Board: React.FC<BoardProps> = ({ value, onClick }) => {
     </div>
   );
 };
+// const props = {
+//   a: "a",
+//   b: "b"
+// };
+// const {a, b} = props;
 
-const Game: React.FC = () => {
+// const props2 = {
+//   timer: new NowDateStore()
+// };
+// const {timer} = props2;
+// yyyy/mm/dd hh/mm/ss
+
+// const his = ["a", "b"];
+// // const a = his[0]
+// // const b = his[1]
+// const [a2, b2] = his;
+//'a', 'b'
+
+const Game: React.FC<{ timer: NowDateStore }> = ({ timer }) => {
   const [history, setHistory] = React.useState<History>([
     { squares: Array(9).fill(null) }
   ]);
@@ -118,8 +137,46 @@ const Game: React.FC = () => {
       <div className="game-info">
         <ol>{buttons}</ol>
       </div>
+      <div>{timer.nowDate.toString()}</div>
     </div>
   );
 };
 
-ReactDOM.render(<Game />, document.getElementById("root"));
+const dateStore = new NowDateStore();
+
+class Pet {
+  name: string;
+  // hoge: () => void;
+  constructor(name: string) {
+    this.name = name;
+    // this.hoge = () => console.log("hoge");
+  }
+  hoge() {
+    console.log(this.name);
+  }
+}
+
+// const named = new Pet("いぬ");
+// named.hoge();
+// const obj = { hoge: named.hoge, name: "aaa" };
+// obj.hoge();
+
+class Food {
+  name: string;
+  pay: number;
+  constructor(name: string, pay: number) {
+    console.log(this);
+    this.name = name;
+    this.pay = pay;
+  }
+  eat() {
+    console.log("料理名:" + this.name + ", 値段:" + this.pay);
+  }
+}
+
+const foodName = new Food("ピザ", 1000);
+const obj = { eat: foodName, name: "test" };
+console.log(obj.eat.name);
+// obj.eat();
+
+ReactDOM.render(<Game timer={dateStore} />, document.getElementById("root"));
