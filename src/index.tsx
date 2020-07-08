@@ -1,182 +1,85 @@
 import * as React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
-import { NowDateStore } from "./NowDateStore";
-import { observer } from "mobx-react";
 
-type Squares = (string | null)[];
-type History = { squares: Squares }[];
+/*
+・boardとsquareを作る。
+・現在のプレイヤー名を表示する。
+・squareをクリックした時に○を付ける。
+・boardコンポーネントに各squareの状態を持たせる。
+・偶数の手番の時は、×を付ける。
+・プレイヤーを切り替える（NextPlayer -> ○ or ×みたいな）
+・値が入ってるsquareはクリックできないようにする。
+・勝利判定を作る。
+・ゲーム終了時に勝ったプレイヤー名を表示させる。
+・ゲーム終了したら、squareをクリックできないようにする。
+*/
 
 interface SquareProps {
-  value: string | null;
+  status: string | null;
   onClick: () => void;
 }
 
-const Square: React.FC<SquareProps> = ({ value, onClick }) => {
+const Square: React.FC<SquareProps> = ({ status, onClick }) => (
+  <div className="square" onClick={onClick}>
+    {status}
+  </div>
+);
+
+const Board: React.FC = () => {
+  const [state, setState] = React.useState<(string | null)[]>(
+    Array(9).fill(null)
+  );
+  const nextPlayer = state.filter((d) => !d).length % 2 ? "O" : "X";
   return (
-    <button className="square" onClick={onClick}>
-      {value}
-    </button>
+    <>
+      <div>NextPlayer: {nextPlayer}</div>
+      <table>
+        <tbody>
+          {[...Array(3)].map((_, i) => (
+            <tr>
+              {[...Array(3)].map((_, j) => (
+                <td>
+                  <Square
+                    status={state[i * 3 + j]}
+                    onClick={() => {
+                      if (judgeWinner(state) || state[i * 3 + j]) {
+                        return;
+                      }
+                      setState(
+                        state.map((e, n) => (n === i * 3 + j ? nextPlayer : e))
+                      );
+                    }}
+                  />
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div>勝者: {judgeWinner(state)}</div>
+    </>
   );
 };
 
-interface BoardProps {
-  value: { squares: Squares };
-  onClick: (squares: Squares) => void;
-}
+const winnerJudgement = [
+  [0, 1, 2],
+  [3, 4, 5],
+  [6, 7, 8],
+  [0, 3, 6],
+  [1, 4, 7],
+  [2, 5, 8],
+  [0, 4, 8],
+  [2, 4, 6],
+];
 
-const Board: React.FC<BoardProps> = ({ value, onClick }) => {
-  const xIsNext = !(value.squares.filter(square => square !== null).length % 2);
-
-  const renderSquare = (i: number) => (
-    <Square value={value.squares[i]} onClick={() => handleClick(i)} />
-  );
-
-  const handleClick = (i: number) => {
-    if (calculateWinner(value.squares) || value.squares[i]) {
-      return;
+const judgeWinner = (state: (string | null)[]) => {
+  for (var i = 0; i < winnerJudgement.length; i++) {
+    const arr = winnerJudgement[i].map((e) => state[e]);
+    if (arr[0] && arr[0] === arr[1] && arr[0] === arr[2]) {
+      return arr[0];
     }
-    const nextSquares = value.squares.slice();
-    nextSquares[i] = xIsNext ? "X" : "O";
-    onClick(nextSquares);
-  };
-
-  const calculateWinner = (squares: Squares) => {
-    const lines = [
-      [0, 1, 2],
-      [3, 4, 5],
-      [6, 7, 8],
-      [0, 3, 6],
-      [1, 4, 7],
-      [2, 5, 8],
-      [0, 4, 8],
-      [2, 4, 6]
-    ];
-    for (let i = 0; i < lines.length; i++) {
-      const [a, b, c] = lines[i];
-      if (
-        squares[a] &&
-        squares[a] === squares[b] &&
-        squares[a] === squares[c]
-      ) {
-        return squares[a];
-      }
-    }
-    return null;
-  };
-  const winner = calculateWinner(value.squares);
-  const status = winner
-    ? `Winner: ${winner}`
-    : `Next player: ${xIsNext ? "X" : "O"}`;
-
-  return (
-    <div>
-      <div className="status">{status}</div>
-      <div className="board-row">
-        {renderSquare(0)}
-        {renderSquare(1)}
-        {renderSquare(2)}
-      </div>
-      <div className="board-row">
-        {renderSquare(3)}
-        {renderSquare(4)}
-        {renderSquare(5)}
-      </div>
-      <div className="board-row">
-        {renderSquare(6)}
-        {renderSquare(7)}
-        {renderSquare(8)}
-      </div>
-    </div>
-  );
-};
-// const props = {
-//   a: "a",
-//   b: "b"
-// };
-// const {a, b} = props;
-
-// const props2 = {
-//   timer: new NowDateStore()
-// };
-// const {timer} = props2;
-// yyyy/mm/dd hh/mm/ss
-
-// const his = ["a", "b"];
-// // const a = his[0]
-// // const b = his[1]
-// const [a2, b2] = his;
-//'a', 'b'
-
-const Game: React.FC<{ timer: NowDateStore }> = ({ timer }) => {
-  const [history, setHistory] = React.useState<History>([
-    { squares: Array(9).fill(null) }
-  ]);
-  const handleClick = (squares: Squares) => {
-    setHistory(history.concat([{ squares }]));
-  };
-
-  const buttons = history.map(
-    (_: any, index: number): React.ReactElement => {
-      const label = index ? "Go to move #" + index : "Go to game start";
-      return (
-        <li key={index}>
-          <button onClick={() => setHistory(history.slice(0, index + 1))}>
-            {label}
-          </button>
-        </li>
-      );
-    }
-  );
-
-  return (
-    <div className="game">
-      <div className="game-board">
-        <Board value={history[history.length - 1]} onClick={handleClick} />
-      </div>
-      <div className="game-info">
-        <ol>{buttons}</ol>
-      </div>
-      <div>{timer.nowDate.toString()}</div>
-    </div>
-  );
+  }
 };
 
-const dateStore = new NowDateStore();
-
-class Pet {
-  name: string;
-  // hoge: () => void;
-  constructor(name: string) {
-    this.name = name;
-    // this.hoge = () => console.log("hoge");
-  }
-  hoge() {
-    console.log(this.name);
-  }
-}
-
-// const named = new Pet("いぬ");
-// named.hoge();
-// const obj = { hoge: named.hoge, name: "aaa" };
-// obj.hoge();
-
-class Food {
-  name: string;
-  pay: number;
-  constructor(name: string, pay: number) {
-    console.log(this);
-    this.name = name;
-    this.pay = pay;
-  }
-  eat() {
-    console.log("料理名:" + this.name + ", 値段:" + this.pay);
-  }
-}
-
-const foodName = new Food("ピザ", 1000);
-const obj = { eat: foodName, name: "test" };
-console.log(obj.eat.name);
-// obj.eat();
-
-ReactDOM.render(<Game timer={dateStore} />, document.getElementById("root"));
+ReactDOM.render(<Board />, document.getElementById("root"));
